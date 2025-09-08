@@ -1,10 +1,11 @@
 plugins {
-	id 'fabric-loom' version '1.3-SNAPSHOT'
+	id 'fabric-loom' version '1.8-SNAPSHOT' // Or latest stable
 	id 'maven-publish'
 }
 
 version = project.mod_version
 group = project.maven_group
+jomlVersion = project.jomlVersion
 
 base {
 	archivesName = project.archives_base_name
@@ -14,19 +15,65 @@ repositories {
     maven {
         url = "https://jitpack.io"
     }
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = "Modrinth"
+				url = "https://api.modrinth.com/maven"
+			}
+		}
+		filter {
+			includeGroup "maven.modrinth"
+		}
+	}
     mavenCentral()
 }
 
+configurations {
+	yguardRuntime
+}
+
 dependencies {
-	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
+
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    modCompileOnly "com.github.moulberry:AxiomClientAPI:1.0.5.3"
+	implementation "org.joml:joml:${jomlVersion}"
+
+	modCompileOnly "com.github.moulberry:AxiomClientAPI:1.0.5.3"
+
+	yguardRuntime 'com.yworks:yguard:4.1.1'
+
+	modImplementation "maven.modrinth:axiom:5.0.1"
+}
+
+tasks.register('yguard') {
+	group = 'build'
+	description = 'Obfuscates and shrinks the mod jar using yGuard'
+
+	dependsOn tasks.named('jar')
+
+	doLast {
+		ant.taskdef(
+				name: 'yguard',
+				classname: 'com.yworks.yguard.YGuardTask',
+				classpath: configurations.yguardRuntime.asPath
+		)
+
+		ant.yguard {
+			inoutpair(in: "${buildDir}/libs/${archivesBaseName}-${version}.jar",
+					out: "${buildDir}/libs/Arceon x Axiom v${version}.jar")
+
+			rename(logfile: "${buildDir}/yguard.log") {
+				keep {
+					'class'(name: 'net.arcaniax.arceon.axiom.ArceonInitializer')
+				}
+			}
+		}
+	}
 }
 
 processResources {
@@ -39,6 +86,10 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 17
+}
+
+tasks.build {
+	finalizedBy tasks.yguard
 }
 
 java {

@@ -1,31 +1,30 @@
 {
 	"schemaVersion": 1,
-	"id": "axiomextensionexample",
+	"id": "arceon",
 	"version": "${version}",
-	"name": "Axiom Extension Example",
-	"description": "Example extension for Axiom using the Axiom Client API",
+	"name": "Arceon x Axiom",
+	"description": "Implements Arceon features into Axiom",
 	"authors": [
-		"Moulberry"
+		"Arcaniax"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://www.patreon.com/c/arcaniax"
 	},
 	"license": "MIT",
-	"icon": "assets/axiomextensionexample/icon.png",
+	"icon": "assets/arceon/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": [
-          "com.moulberry.axiomextensionexample.AxiomExtensionExample"
+		"client": [
+			"net.arcaniax.arceon.axiom.ArceonInitializer"
 		]
 	},
 	"depends": {
 		"fabricloader": ">=0.14.21",
-		"minecraft": "~1.20.1",
-		"java": ">=17",
+		"minecraft": ">=1.21.4",
+		"java": ">=21",
 		"fabric-api": "*"
 	},
 	"requires": {
-		"axiom": ">=1.0.5"
+		"axiom": ">=5.0.0"
 	}
 }
