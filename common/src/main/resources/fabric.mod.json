@@ -1,0 +1,36 @@
+{
+	"schemaVersion": 1,
+	"id": "arceon",
+	"version": "${version}",
+	"name": "Arceon",
+	"description": "Adds Arceon client previews and optional Axiom integrations",
+	"authors": [
+		"Arcaniax"
+	],
+	"contact": {
+		"homepage": "https://www.patreon.com/c/arcaniax"
+	},
+	"license": "All-Rights-Reserved",
+	"icon": "assets/arceon/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"client": [
+			"net.arcaniax.arceon.axiom.ArceonClient"
+		]
+	},
+	"mixins": [
+		{
+			"config": "arceon.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "${minecraft_dependency}",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"axiom": ">=5.4.2"
+	}
+}

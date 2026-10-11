@@ -10,21 +10,28 @@
 	"contact": {
 		"homepage": "https://www.patreon.com/c/arcaniax"
 	},
-	"license": "MIT",
+	"license": "All-Rights-Reserved",
 	"icon": "assets/arceon/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"client": [
-			"net.arcaniax.arceon.axiom.ArceonInitializer"
+			"net.arcaniax.arceon.axiom.ArceonClient"
 		]
 	},
+	"mixins": [
+		"arceon.mixins.json",
+		{
+			"config": "arceon.client.mixins.json",
+			"environment": "client"
+		}
+	],
 	"depends": {
 		"fabricloader": ">=0.14.21",
-		"minecraft": ">=1.21.4",
+		"minecraft": "${minecraft_dependency}",
 		"java": ">=21",
 		"fabric-api": "*"
 	},
 	"requires": {
-		"axiom": ">=5.0.0"
+		"axiom": ">=5.4.2"
 	}
 }

@@ -1,120 +1,34 @@
-plugins {
-	id 'fabric-loom' version '1.8-SNAPSHOT' // Or latest stable
-	id 'maven-publish'
+allprojects {
+	group = project.findProperty("maven_group")
+	version = project.findProperty("mod_version")
 }
 
-version = project.mod_version
-group = project.maven_group
-jomlVersion = project.jomlVersion
-
-base {
-	archivesName = project.archives_base_name
+tasks.register("buildAll") {
+	group = "build"
+	description = "Build all Minecraft targets"
+	dependsOn(":mod-261:build", ":mod-2612:build", ":mod-263:build", ":mod-12111:build")
+	finalizedBy("collectReleaseJars")
 }
 
-repositories {
-    maven {
-        url = "https://jitpack.io"
-    }
-	exclusiveContent {
-		forRepository {
-			maven {
-				name = "Modrinth"
-				url = "https://api.modrinth.com/maven"
-			}
-		}
-		filter {
-			includeGroup "maven.modrinth"
-		}
+tasks.register("yguardAll") {
+	group = "build"
+	description = "Run yGuard for all Minecraft targets"
+	dependsOn(":mod-261:yguard", ":mod-2612:yguard", ":mod-263:yguard", ":mod-12111:yguard")
+}
+
+tasks.register("collectReleaseJars", Copy) {
+	group = "build"
+	description = "Collect all final jars into root build/releases"
+	dependsOn("yguardAll")
+	into(layout.buildDirectory.dir("releases"))
+
+	from("mod-12111/build/libs") {
+		include "Arceon x Axiom * - for MC 1.21.jar"
 	}
-    mavenCentral()
-}
-
-configurations {
-	yguardRuntime
-}
-
-dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-	implementation "org.joml:joml:${jomlVersion}"
-
-	modCompileOnly "com.github.moulberry:AxiomClientAPI:1.0.5.3"
-
-	yguardRuntime 'com.yworks:yguard:4.1.1'
-
-	modImplementation "maven.modrinth:axiom:5.0.1"
-}
-
-tasks.register('yguard') {
-	group = 'build'
-	description = 'Obfuscates and shrinks the mod jar using yGuard'
-
-	dependsOn tasks.named('jar')
-
-	doLast {
-		ant.taskdef(
-				name: 'yguard',
-				classname: 'com.yworks.yguard.YGuardTask',
-				classpath: configurations.yguardRuntime.asPath
-		)
-
-		ant.yguard {
-			inoutpair(in: "${buildDir}/libs/${archivesBaseName}-${version}.jar",
-					out: "${buildDir}/libs/Arceon x Axiom v${version}.jar")
-
-			rename(logfile: "${buildDir}/yguard.log") {
-				keep {
-					'class'(name: 'net.arcaniax.arceon.axiom.ArceonInitializer')
-				}
-			}
-		}
+	from("mod-2612/build/libs") {
+		include "Arceon x Axiom * - for MC 26.2.jar"
 	}
-}
-
-processResources {
-	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 17
-}
-
-tasks.build {
-	finalizedBy tasks.yguard
-}
-
-java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
-
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
-}
-
-// configure the maven publication
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			from components.java
-		}
-	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
+	from("mod-263/build/libs") {
+		include "Arceon x Axiom * - for MC 26.3.jar"
 	}
 }

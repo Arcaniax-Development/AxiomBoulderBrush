@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.arcaniax.arceon.axiom.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "net.arcaniax.arceon.axiom.mixin.AxiomMixinPlugin",
+  "client": [
+    "ToolsWindowMixin",
+    "EditorUIMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "client-arceon-refmap.json"
+}

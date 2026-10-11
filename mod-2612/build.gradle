@@ -1,0 +1,110 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version_2612}"
+	id 'maven-publish'
+}
+
+base {
+	archivesName = "${archives_base_name}-mc26.2"
+}
+
+repositories {
+	maven { url = "https://jitpack.io" }
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = "Modrinth"
+				url = "https://api.modrinth.com/maven"
+			}
+		}
+		filter { includeGroup "maven.modrinth" }
+	}
+	mavenCentral()
+}
+
+configurations {
+	yguardRuntime
+	axiomMod
+}
+
+def axiomApiOutput = layout.buildDirectory.file("tmp/axiom/axiomclientapi-unobf.jar")
+def extractAxiomApi = tasks.register('extractAxiomApi', Copy) {
+	from({ zipTree(configurations.axiomMod.singleFile) }) {
+		include "META-INF/jars/axiomclientapi-unobf.jar"
+	}
+	into(layout.buildDirectory.dir("tmp/axiom"))
+	eachFile { path = name }
+	includeEmptyDirs = false
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${minecraft_version_2612}"
+	implementation "net.fabricmc:fabric-loader:${loader_version_2612}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version_2612}"
+	implementation "net.fabricmc.fabric-api:fabric-api-deprecated:${fabric_version_2612}"
+	implementation "org.joml:joml:${jomlVersion}"
+	include(implementation("com.moulberry:mixinconstraints:1.0.9"))
+	yguardRuntime 'com.yworks:yguard:4.1.1'
+	axiomMod axiom_dependency_2612
+	compileOnly(files(provider { configurations.axiomMod.singleFile }))
+	compileOnly(files(axiomApiOutput))
+}
+
+sourceSets {
+	main {
+		java.srcDirs = ["../common/src/main/java", "src/main/java"]
+		resources.srcDirs = ["../common/src/main/resources", "src/main/resources"]
+	}
+}
+
+processResources {
+	inputs.property "version", project.version
+	inputs.property "minecraft_dependency", minecraft_version_2612
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version, "minecraft_dependency": minecraft_version_2612
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	dependsOn extractAxiomApi
+	options.release = 21
+}
+
+java {
+	toolchain { languageVersion = JavaLanguageVersion.of(25) }
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+tasks.register('installMod', Copy) {
+	group = 'distribution'
+	def outputJar = layout.buildDirectory.file("libs/${base.archivesName.get()}-${version}.jar").get().asFile
+	from(outputJar)
+	into("C:/Users/lesle/AppData/Roaming/ModrinthApp/profiles/${modrinth_profile_2612}/mods")
+	doFirst { println "Copying ${outputJar.name} to ${modrinth_profile_2612} mods folder..." }
+}
+
+tasks.register('yguard') {
+	group = 'build'
+	dependsOn tasks.named('jar')
+	doLast {
+		def inputJar = layout.buildDirectory.file("libs/${base.archivesName.get()}-${version}.jar").get().asFile.absolutePath
+		def outputJar = layout.buildDirectory.file("libs/Arceon x Axiom ${version} - for MC 26.2.jar").get().asFile.absolutePath
+		def yguardLog = layout.buildDirectory.file("yguard.log").get().asFile.absolutePath
+		ant.taskdef(name: 'yguard', classname: 'com.yworks.yguard.YGuardTask', classpath: configurations.yguardRuntime.asPath)
+		ant.yguard {
+			inoutpair(in: inputJar, out: outputJar)
+			rename(logfile: yguardLog) {
+				keep {
+					'class'(name: 'net.arcaniax.arceon.axiom.ArceonClient')
+					'class'(name: 'net.arcaniax.arceon.axiom.mixin.EditorUIMixin')
+					'class'(name: 'net.arcaniax.arceon.axiom.mixin.ToolsWindowMixin')
+					'class'(name: 'net.arcaniax.arceon.axiom.mixin.AxiomMixinPlugin')
+				}
+			}
+		}
+	}
+	finalizedBy tasks.named('installMod')
+}
+
+tasks.build { finalizedBy tasks.installMod }

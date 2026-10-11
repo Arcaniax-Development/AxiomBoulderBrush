@@ -8,3 +8,6 @@ pluginManagement {
 		gradlePluginPortal()
 	}
 }
+
+rootProject.name = "AxiomBoulder"
+include("mod-261", "mod-2612", "mod-263", "mod-12111")
